@@ -10,13 +10,13 @@
 
 digit [0-9]
 digitNoZ [1-9]
-letter [a_zA_Z]
-letter_ _|{letter}
+letter [a-zA-Z]
+letterg _|{letter}
 INT 0|({digitNoZ}{digit}*)
 NUM_8 0[0-9]+
 NUM_16 0[xX]({digit}|{letter})+
 FLOAT_NoE {digit}+\.{digit}+
-ID {letter_}({letter_}|{digit})*
+ID ({letterg})({letterg}|{digit})*
 SPACE [ \t\n]
 SEMI ;
 COMMA ,
@@ -47,7 +47,7 @@ WHILE while
 
 {SEMI} {handle(SEMI);}
 {COMMA} {handle(COMMA);}
-{ASSIGNOP} {handle(ASSIGNOP;}
+{ASSIGNOP} {handle(ASSIGNOP);}
 {RELOP} {handle(RELOP);}
 {PLUS} {handle(PLUS);}
 {MINUS} {handle(MINUS);}
