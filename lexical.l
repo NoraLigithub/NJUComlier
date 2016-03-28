@@ -1,8 +1,10 @@
 %{
 #include <stdlib.h>
 #include <stdio.h>
+#include "syntax.tab.h"
 #define handle(token) do { \
    printf("Line:%d Token:%s Symbol:%s\n",yylineno,"token",yytext); \
+   return token; \
 } while(0)
 %}
 
