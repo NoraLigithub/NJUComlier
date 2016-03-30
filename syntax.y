@@ -1,105 +1,228 @@
 %{
  #include "lex.yy.c"
  #include <stdio.h>
+ #include "tree.h"
+ #include "marco.h"
+ #define YYSTYPE node_t*
+ int yylex();
+ node_t* createTree(int airty, ...);
+
+ #define handleS(root,token,arity, ...) \
+ do { \
+ 	root=createTree(arity,__VA_ARGS__); \
+ 	root->name=toArray(str(token)); \
+ } while(0)
 %}
 
 /*declared tokens*/
+
 %token INT FLOAT ID
-%token PLUS MINUS 
-%token STAR DIV
-%token SEMI COMMA ASSIGNOP RELOP AND OR DOT NOT TYPE LP RP LB RB LC RC STRUCT RETURN IF ELSE WHILE
+%right ASSIGNOP
+%left OR
+%left AND
+%left RELOP
+%left PLUS MINUS 
+%left STAR DIV
+%right NOT
+%left LP RP DOT LB RB
+%token LC RC
+%token TYPE STRUCT RETURN IF WHILE
+%token SEMI COMMA
+%nonassoc LOWER_THAN_ELSE
+%nonassoc ELSE
 %%
 
 Program: ExtDefList
+	{
+	handleS($$,Program,1,$1);
+	}
 	;
 ExtDefList: ExtDef ExtDefList
-	|
+	{
+	handleS($$,ExtDefList,2,$1,$2);
+	}
+	|{$$=NULL;}
 	;
 ExtDef: Specifier ExtDecList SEMI
+	{
+	handleS($$,ExtDef,3,$1,$2,$3);
+	}
 	| Specifier SEMI
+	{
+	handleS($$,ExtDef,2,$1,$2);
+	}
 	| Specifier FunDec CompSt
+	{
+	handleS($$,Specifier,3,$1,$2,$3);
+	}
 	;
 ExtDecList: VarDec
+	{
+	handleS($$,ExtDecList,1,$1);
+	}
 	| VarDec COMMA ExtDecList
+	{
+	handleS($$,ExtDecList,3,$1,$2,$3);
+	}
 	;
 
 /*Specifiers*/
 
 Specifier: TYPE
+	{
+	handleS($$,Specifier,1,$1);
+	}
 	| StructSpecifier
+	{
+	handleS($$,Specifier,1,$1);
+	}
 	;
 StructSpecifier: STRUCT OpTag LC DefList RC
+	{
+	handleS($$,StructSpecifier,5,$1,$2,$3,$4,$5);
+	}
 	| STRUCT Tag
+	{
+	handleS($$,StructSpecifier,2,$1,$2);
+	}
 	;
 OpTag: ID
-	|
+	{
+	handleS($$,OpTag,1,$1);
+	}
+	|{$$=NULL;}
 	;
 Tag: ID
+	{
+	handleS($$,Tag,1,$1);
+	}
 	;
 
 /*declarators*/
 
 VarDec: ID
+	{
+	handleS($$,VarDec,1,$1);
+	}
 	| VarDec LB INT RB
+	{
+	handleS($$,VarDec,4,$1,$2,$3,$4);
+	}
 	;
 FunDec: ID LP VarList RP
+	{
+	handleS($$, FunDec, 4, $1, $2, $3, $4); 
+	}
 	| ID LP RP
+	{
+	handleS($$, FunDec, 3, $1, $2, $3); 
+	}
 	;
 VarList: ParamDec COMMA VarList
+	{
+	handleS($$, VarList, 3, $1, $2, $3);
+	}
 	| ParamDec
+	{
+	handleS($$, VarList, 1, $1);
+	}
 	;
 ParamDec: Specifier VarDec
+	{
+	handleS($$, ParamDec, 2, $1, $2);
+	}
 	;
 
 /*statements*/
 
 CompSt: LC DefList StmtList RC
+	{
+	handleS($$,CompSt,4,$1,$2,$3,$4);
+	}
 	;
 StmtList: Stmt StmtList
-	|
+	{
+	handleS($$, StmtList, 2, $1, $2);
+	}
+	|{$$=NULL;}
 	;
 Stmt: Exp SEMI
+	{
+	handleS($$, Stmt, 2, $1, $2);
+	}
 	| CompSt
+	{
+	handleS($$, Stmt, 1, $1);
+	}
 	| RETURN Exp SEMI
+	{
+	handleS($$, Stmt, 3, $1, $2, $3);
+	}
+	| IF LP Exp RP Stmt %prec LOWER_THAN_ELSE
+	{
+	handleS($$, Stmt, 5, $1, $2, $3, $4, $5);
+	}
 	| IF LP Exp RP Stmt ELSE Stmt
+	{
+	handleS($$, Stmt, 7, $1, $2, $3, $4, $5, $6, $7);
+	}
 	| WHILE LP Exp RP Stmt
+	{
+	handleS($$, Stmt, 5, $1, $2, $3, $4, $5); 
+	}
 	;
 
 /*Local Definitions*/
 
-DefList: Def DefList;
+DefList: Def DefList
+	{
+	handleS($$,DefList,2,$1,$2);
+	}
 	|
+	{$$=NULL;}
 	;
 Def: Specifier DecList SEMI
+	{
+	handleS($$,Def,3,$1,$2,$3);
+	}
 	;
 DecList: Dec
-	|
+	{
+	handleS($$,DecList,1,$1);
+	}
+	|{$$=NULL;}
 	;
 Dec: VarDec
+	{
+	handleS($$,Dec,1,$1);
+	}
 	| VarDec ASSIGNOP Exp
+	{
+	handleS($$,Dec,3,$1,$2,$3);
+	}
 	;
 
 /*Expressions*/
 
-Exp: Exp ASSIGNOP Exp
-	| Exp AND Exp
-	| Exp OR Exp
-	| Exp RELOP Exp
-	| Exp PLUS Exp
-	| Exp MINUS Exp
-	| Exp STAR Exp
-	| Exp DIV Exp
-	| LP Exp RP
-	| MINUS Exp
-	| NOT Exp
-	| ID LP Args RP
-	| ID LP RP
-	| Exp LB Exp RB
-	| Exp DOT ID
-	| ID
-	| INT
-	| FLOAT
-	;
-Args: Exp COMMA Args
-	| Exp
+Exp: Exp ASSIGNOP Exp { handleS($$, Exp, 3, $1, $2, $3); }
+   | Exp AND Exp { handleS($$, Exp, 3, $1, $2, $3); }
+   | Exp OR Exp { handleS($$, Exp, 3, $1, $2, $3); }
+   | Exp RELOP Exp { handleS($$, Exp, 3, $1, $2, $3); }
+   | Exp PLUS Exp { handleS($$, Exp, 3, $1, $2, $3); }
+   | Exp MINUS Exp { handleS($$, Exp, 3, $1, $2, $3); }
+   | Exp STAR Exp { handleS($$, Exp, 3, $1, $2, $3); }
+   | Exp DIV Exp { handleS($$, Exp, 3, $1, $2, $3); }
+   | Exp LB Exp RB { handleS($$, Exp, 4, $1, $2, $3, $4); }
+   | Exp DOT ID { handleS($$, Exp, 3, $1, $2, $3); }
+   | LP Exp RP { handleS($$, Exp, 3, $1, $2, $3); }
+   | MINUS Exp { handleS($$, Exp, 2, $1, $2); }
+   | NOT Exp { handleS($$, Exp, 2, $1, $2); }
+   | ID LP Args RP { handleS($$, Exp, 4, $1, $2, $3, $4); }
+   | ID LP RP { handleS($$, Exp, 3, $1, $2, $3); }
+   | ID { handleS($$, Exp, 1, $1); }
+   | INT { handleS($$, Exp, 1, $1); }
+   | FLOAT { handleS($$, Exp, 1, $1); }
+   ;
+Args: Exp COMMA Args { handleS($$, Args, 3, $1, $2, $3); }
+	| Exp { handleS($$, Args, 1, $1); }
 	;

@@ -3,6 +3,7 @@
 
 extern FILE* yyin;
 extern int yylex(); 
+extern int yyparse();
 
 int main(int argc,char** argv)
 {

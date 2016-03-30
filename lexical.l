@@ -1,11 +1,27 @@
 %{
 #include <stdlib.h>
 #include <stdio.h>
+#include "tree.h"
+#include "marco.h"
+#define YYSTYPE node_t*
 #include "syntax.tab.h"
+node_t* newNode();
 #define handle(token) do { \
-   printf("Line:%d Token:%s Symbol:%s\n",yylineno,"token",yytext); \
+   yylval = newToken(token); \
+   printf("Line:%d Token:%s Symbol:%s\n",yylineno,toArray(str(token)),yytext); \
+   yylval->name = toArray(str(token)); \
    return token; \
 } while(0)
+node_t* newToken(int token)
+{
+	node_t* r=newNode();
+	r->lineno=yylineno;
+	r->token=token;
+	r->terminalFlag=1;
+	//terminal symbol
+	r->text=toArray(yytext);
+	return r;
+}
 %}
 
 %option yylineno
