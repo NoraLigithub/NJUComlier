@@ -10,11 +10,13 @@ node_t* newNode()
 	//not terminal by default 
 	r->child=NULL;
 	r->nextSibling=NULL;
-	r->lineno=0;
+	r->lineno=1;
 	return r;
 }
 node_t* NodeAddChild(node_t* root,node_t* child)
 {
+	if(root==NULL) return NULL;
+	if(child==NULL) return root;
 	node_t* nd=root->child;
 	if(nd==NULL)
 		root->child=child;
@@ -37,9 +39,52 @@ node_t* createTree(int airty, ...)
 	for(i=0;i<airty;i++)
 	{
 		node_t* p = va_arg(ap,node_t*);
-		if(i==0) root->lineno=p->lineno;
-		if(p!=NULL) NodeAddChild(root,p);
+		if(p!=NULL)
+		{
+			if(i==0) root->lineno=p->lineno;
+			root=NodeAddChild(root,p);
+		}
 	}
 	va_end(ap);
 	return root;
+}
+
+void printTree(node_t* root,int blankLen)
+{
+	int i;
+	for(i=0;i<blankLen;i++)
+	{
+		printf("  ");
+	}
+	printf("%s",root->name);
+	if(root->terminalFlag==1)
+	{
+		if(strcmp(root->name,"INT")==0)
+		{
+			printf(": %d",atoi(root->text));
+		}
+		else if(strcmp(root->name,"FLOAT")==0)
+		{
+			printf(": %f",atof(root->text));
+		}
+		else if(strcmp(root->name,"TYPE")==0||strcmp(root->name,"ID")==0)
+		{
+			printf(": %s",root->text);
+		}
+	}
+	else
+	{
+		printf(" (%d) ",root->lineno);
+	}
+	printf("\n");
+	if(root->child!=NULL)
+	{
+		printTree(root->child,blankLen+1);
+		node_t* p=root->child;
+		while(p->nextSibling!=NULL)
+		{
+			p=p->nextSibling;
+			printTree(p,blankLen+1);
+		}
+	}	
 }

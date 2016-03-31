@@ -4,6 +4,7 @@
  #include "tree.h"
  #include "marco.h"
  #define YYSTYPE node_t*
+ int is_error=0;
  int yylex();
  node_t* createTree(int airty, ...);
 
@@ -12,7 +13,18 @@
  	root=createTree(arity,__VA_ARGS__); \
  	root->name=toArray(str(token)); \
  } while(0)
+
+ #define errorhandle(errorToken) \
+ do{ \
+ 	char* msg; \
+ 	sprintf(msg,"missing %s",toArray(errorToken)); \
+ 	is_error=1; \
+ }while(0)
+
+ extern void yyerror(const char* msg);
 %}
+
+%define parse.error verbose
 
 /*declared tokens*/
 
@@ -35,6 +47,8 @@
 Program: ExtDefList
 	{
 	handleS($$,Program,1,$1);
+	if(is_error==0)
+		printTree($$,0);
 	}
 	;
 ExtDefList: ExtDef ExtDefList
@@ -53,8 +67,10 @@ ExtDef: Specifier ExtDecList SEMI
 	}
 	| Specifier FunDec CompSt
 	{
-	handleS($$,Specifier,3,$1,$2,$3);
+	handleS($$,Extdef,3,$1,$2,$3);
 	}
+	| Specifier error {errorhandle(";");}
+	| Specifier ExtDecList error {errorhandle(";");}
 	;
 ExtDecList: VarDec
 	{
@@ -77,7 +93,7 @@ Specifier: TYPE
 	handleS($$,Specifier,1,$1);
 	}
 	;
-StructSpecifier: STRUCT OpTag LC DefList RC
+StructSpecifier: STRUCT OptTag LC DefList RC
 	{
 	handleS($$,StructSpecifier,5,$1,$2,$3,$4,$5);
 	}
@@ -86,9 +102,9 @@ StructSpecifier: STRUCT OpTag LC DefList RC
 	handleS($$,StructSpecifier,2,$1,$2);
 	}
 	;
-OpTag: ID
+OptTag: ID
 	{
-	handleS($$,OpTag,1,$1);
+	handleS($$,OptTag,1,$1);
 	}
 	|{$$=NULL;}
 	;
@@ -108,6 +124,7 @@ VarDec: ID
 	{
 	handleS($$,VarDec,4,$1,$2,$3,$4);
 	}
+	
 	;
 FunDec: ID LP VarList RP
 	{
@@ -170,6 +187,14 @@ Stmt: Exp SEMI
 	{
 	handleS($$, Stmt, 5, $1, $2, $3, $4, $5); 
 	}
+	| Exp error {errorhandle(";");}
+	| RETURN Exp error {errorhandle(";");}
+	| error SEMI {is_error=1;}
+	| error ELSE {is_error=1;}
+	| error RETURN {is_error=1;}
+	| error IF {is_error=1;}
+	| error WHILE {is_error=1;}
+
 	;
 
 /*Local Definitions*/
@@ -190,7 +215,7 @@ DecList: Dec
 	{
 	handleS($$,DecList,1,$1);
 	}
-	|{$$=NULL;}
+	| Dec COMMA DecList
 	;
 Dec: VarDec
 	{
@@ -222,7 +247,16 @@ Exp: Exp ASSIGNOP Exp { handleS($$, Exp, 3, $1, $2, $3); }
    | ID { handleS($$, Exp, 1, $1); }
    | INT { handleS($$, Exp, 1, $1); }
    | FLOAT { handleS($$, Exp, 1, $1); }
+
    ;
 Args: Exp COMMA Args { handleS($$, Args, 3, $1, $2, $3); }
 	| Exp { handleS($$, Args, 1, $1); }
 	;
+
+%%
+void yyerror(const char* msg)
+{
+	is_error=1;
+	int lineno=yylineno;
+	fprintf(stderr,"Error type B at Line %d :%s\n",lineno,msg);
+}

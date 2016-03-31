@@ -4,7 +4,8 @@
 extern FILE* yyin;
 extern int yylex(); 
 extern int yyparse();
-
+// extern int yydebug;
+extern int yylineno;
 int main(int argc,char** argv)
 {
 	if(argc <= 1) return 1;
@@ -14,7 +15,9 @@ int main(int argc,char** argv)
 		perror(argv[1]);
 		return 1;
 	}
+	yylineno=1;
 	yyrestart(f);
+//	yydebug=1;
 	yyparse();
 	return 0;
 /*	if(argc>1)
