@@ -16,7 +16,7 @@
 
  #define errorhandle(errorToken) \
  do{ \
- 	char* msg; \
+ 	char msg[50]; \
  	sprintf(msg,"missing %s",toArray(errorToken)); \
  	is_error=1; \
  }while(0)
@@ -124,6 +124,7 @@ VarDec: ID
 	{
 	handleS($$,VarDec,4,$1,$2,$3,$4);
 	}
+	| VarDec LB error RB
 	
 	;
 FunDec: ID LP VarList RP
@@ -134,6 +135,7 @@ FunDec: ID LP VarList RP
 	{
 	handleS($$, FunDec, 3, $1, $2, $3); 
 	}
+	| ID LP error RP
 	;
 VarList: ParamDec COMMA VarList
 	{

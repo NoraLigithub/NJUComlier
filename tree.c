@@ -17,35 +17,51 @@ node_t* NodeAddChild(node_t* root,node_t* child)
 {
 	if(root==NULL) return NULL;
 	if(child==NULL) return root;
+	//printf("enter NodeAddChild root=%s,child=%s\n",root->name,child->name );
 	node_t* nd=root->child;
+	//printf("enter NodeAddChild root=%s,child=%s  2\n",root->name,child->name );
 	if(nd==NULL)
 		root->child=child;
 	else
 	{
 		while(nd->nextSibling!=NULL)
 		{
+			//printf("enter NodeAddChild root=%s,child=%s  3\n",root->name,child->name);
 			nd=nd->nextSibling;
 		}
+			//printf("enter NodeAddChild root=%s,child=%s  4\n",root->name,child->name );
 		nd->nextSibling=child;	
+			//printf("enter NodeAddChild root=%s,child=%s  5\n",root->name,child->name );
+
 	}
 	return root;
 }
 node_t* createTree(int airty, ...)
 {
 	va_list ap;
+	//printf("create tree:airty=%d,1\n",airty);
 	va_start(ap,airty);
-	node_t* root=newNode();
+	//printf("create tree:airty=%d,2\n",airty);
+	node_t* root=newNode(); 
+	//printf("create tree:airty=%d,3\n",airty);
 	int i;
 	for(i=0;i<airty;i++)
 	{
+		//printf("create tree:airty=%d,4,cirtcle:%d\n",airty,i);
 		node_t* p = va_arg(ap,node_t*);
+		//printf("create tree:airty=%d,5,cirtcle:%d\n",airty,i);
 		if(p!=NULL)
 		{
+			//printf("create tree:airty=%d,6,cirtcle:%d\n",airty,i);
 			if(i==0) root->lineno=p->lineno;
+			//printf("this is in the process of createTree,adding %s\n",p->name );
 			root=NodeAddChild(root,p);
+			//printf("create tree:airty=%d,7,cirtcle:%d\n",airty,i);
 		}
 	}
+	//printf("create tree:airty=%d,8,cirtcle:%d\n",airty,i);
 	va_end(ap);
+	//printf("create tree:airty=%d,9,cirtcle:%d\n",airty,i);
 	return root;
 }
 
