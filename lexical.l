@@ -8,10 +8,10 @@
 #include "syntax.tab.h"
 node_t* newNode();
 extern int is_error;
+// printf("Line:%d Token:%s Symbol:%s\n",yylineno,toArray(str(token)),yytext); 
 #define handle(token) do { \
    yylval = newToken(token); \
    yylval->name=toArray(str(token)); \
-   printf("Line:%d Token:%s Symbol:%s\n",yylineno,toArray(str(token)),yytext); \
    return token; \
 } while(0)
 node_t* newToken(int token)

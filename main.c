@@ -4,6 +4,7 @@
 extern FILE* yyin;
 extern int yylex(); 
 extern int yyparse();
+extern int yyrestart();
 // extern int yydebug;
 extern int yylineno;
 int main(int argc,char** argv)

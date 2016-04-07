@@ -124,7 +124,6 @@ VarDec: ID
 	{
 	handleS($$,VarDec,4,$1,$2,$3,$4);
 	}
-	| VarDec LB error RB
 	
 	;
 FunDec: ID LP VarList RP
@@ -135,7 +134,7 @@ FunDec: ID LP VarList RP
 	{
 	handleS($$, FunDec, 3, $1, $2, $3); 
 	}
-	| ID LP error RP
+	| 
 	;
 VarList: ParamDec COMMA VarList
 	{
@@ -249,6 +248,9 @@ Exp: Exp ASSIGNOP Exp { handleS($$, Exp, 3, $1, $2, $3); }
    | ID { handleS($$, Exp, 1, $1); }
    | INT { handleS($$, Exp, 1, $1); }
    | FLOAT { handleS($$, Exp, 1, $1); }
+   | LB Exp error
+   | error RP
+   | error SEMI
 
    ;
 Args: Exp COMMA Args { handleS($$, Args, 3, $1, $2, $3); }
