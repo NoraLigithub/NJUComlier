@@ -7,10 +7,5 @@
 #define concat_temp(x, y) x ## y
 #define concat(x, y) concat_temp(x, y)
 
-char* toArray(const char* s) {
-	char* p = (char*)malloc(strlen(s)+1);
-	strcpy(p, s);
-	return p;
-}
-
+char* toArray(const char* s);
 #endif

@@ -8,6 +8,12 @@
  int yylex();
  node_t* createTree(int airty, ...);
 
+char* toArray(const char* s) {
+	char* p = (char*)malloc(strlen(s)+1);
+	strcpy(p, s);
+	return p;
+}
+
  #define handleS(root,token,arity, ...) \
  do { \
  	root=createTree(arity,__VA_ARGS__); \
@@ -47,8 +53,10 @@
 Program: ExtDefList
 	{
 	handleS($$,Program,1,$1);
-	if(is_error==0)
+	if(is_error==0){
 		printTree($$,0);
+		root=$$;
+	}
 	}
 	;
 ExtDefList: ExtDef ExtDefList
@@ -67,7 +75,7 @@ ExtDef: Specifier ExtDecList SEMI
 	}
 	| Specifier FunDec CompSt
 	{
-	handleS($$,Extdef,3,$1,$2,$3);
+	handleS($$,ExtDef,3,$1,$2,$3);
 	}
 	| Specifier error {errorhandle(";");}
 	| Specifier ExtDecList error {errorhandle(";");}
@@ -217,6 +225,9 @@ DecList: Dec
 	handleS($$,DecList,1,$1);
 	}
 	| Dec COMMA DecList
+	{
+	 handleS($$, DecList, 3, $1, $2, $3); 
+	}
 	;
 Dec: VarDec
 	{

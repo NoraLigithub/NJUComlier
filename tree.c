@@ -3,7 +3,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <assert.h> 
 
+node_t* root=NULL;
 node_t* newNode()
 {
 	node_t* r=(node_t*)malloc(sizeof(node_t));
@@ -104,4 +106,34 @@ void printTree(node_t* root,int blankLen)
 			printTree(p,blankLen+1);
 		}
 	}	
+}
+node_t* treeKthChild(node_t* root,int k)
+{
+	assert(root!=NULL);
+	node_t* p=root->child;
+	while(k!=1)
+	{
+		if(p==NULL) return p;
+		p=p->nextSibling;
+		k--;
+	}
+	return p;
+}
+
+node_t* treeLastChild(node_t* root)
+{
+	assert(root!=NULL);
+	root=root->child;
+	node_t* child=root;
+	while(root!=NULL)
+	{
+		child=root;
+		root=root->nextSibling;
+	}
+	return child;
+}
+node_t* treeFirstChild(node_t* r)
+{
+	assert(r!=NULL);
+	return r->child;
 }
