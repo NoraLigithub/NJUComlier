@@ -1377,7 +1377,7 @@ yyreduce:
     {
 	handleS((yyval),Program,1,(yyvsp[0]));
 	if(is_error==0){
-		printTree((yyval),0);
+		//printTree($$,0);
 		root=(yyval);
 	}
 	}

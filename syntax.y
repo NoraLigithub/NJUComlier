@@ -54,7 +54,7 @@ Program: ExtDefList
 	{
 	handleS($$,Program,1,$1);
 	if(is_error==0){
-		printTree($$,0);
+		//printTree($$,0);
 		root=$$;
 	}
 	}

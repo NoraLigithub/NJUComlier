@@ -44,8 +44,9 @@ typedef struct htNode_
 		func* func;
 		Type* type;
 	};
-	int depth;
+	int pos,depth;
 	htNode* next;
+	htNode* snext;//the same depth
 } htNode;
 
 typedef fieldList Dec;
@@ -54,12 +55,14 @@ typedef fieldList Arg;
 typedef func Func;
 
 htNode* htTable[TABLE_SIZE];
+htNode* stack[TABLE_SIZE];
+//SIZE is casual
 
-int hashpjw(char* name);
+int hashpjw(const char* name);
 
 extern void htTable_ini();
 
-htNode* node_seek(char* name);
+htNode* node_seek(const char* name);
 bool node_insert(htNode* h);
 fieldList* fieldFind(fieldList*  structure, const char* fieldName);
 fieldList* fieldInsert(fieldList* list,fieldList*  structure);
@@ -73,4 +76,6 @@ void typeToStr(Type*, char*);
 void argsToStr(Arg*, char*);
 Field* fieldFind(Arg*, const char*);
 int typeSize(Type *);
+void symbolsStackPop();
+void symbolsStackPush();
 #endif

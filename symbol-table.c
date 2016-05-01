@@ -1,7 +1,7 @@
 #include "symbol-table.h"
 #include "common.h"
 
-int hashpjw(char* name)
+int hashpjw(const char* name)
 {
 	unsigned val = 0, i;
 	for(; *name; ++name) {
@@ -11,18 +11,70 @@ int hashpjw(char* name)
 	}
 	return (int)val;
 }
-
+unsigned stackTop;
 void htTable_ini()
 {
 	int i=0;
+	stackTop=0;
 	for(;i<TABLE_SIZE;i++)
 	{
 		htTable[i]=NULL;
+		stack[i]=NULL;
 	}
 	typeIni();
 }
-
-htNode* node_seek(char* name)
+void symbolRelease(htNode* h)
+{
+	assert(h!=NULL);
+	if(((h->kind==VAR)&&(h->type->kind==ARRAY))||(h->kind=STRUCT)){
+		htNode* bef=htTable[h->pos];
+		if(bef!=NULL&&bef!=h)
+		{
+			while(bef!=NULL&&bef->next!=h){
+				bef=bef->next;
+				//assert(bef!=NULL);
+			}
+			bef->next=h->next;
+		}else{
+			htTable[h->pos]=h->next;
+		}
+		typeRelease(h->type);
+	}
+	free(h->name);
+	free(h);
+}
+void symbolsStackPush(){
+	stackTop++;
+}
+void symbolsStackPop(){
+	assert(stackTop>=0);
+	htNode *p=stack[stackTop],*q;
+	while(p!=NULL){
+		q=p->snext;
+		symbolRelease(p);
+		//free(p);
+		p=q;
+	}
+	stackTop--;
+}
+bool symbolAtStackTop(const char* name){
+	htNode* h=node_seek(name);
+	return (h!=NULL)&&(h->depth==stackTop);
+}
+void symbolAddStack(htNode* h)
+{
+	assert(h!=NULL);
+	h->depth=stackTop;
+	if(stack[stackTop]==NULL){ 
+		stack[stackTop]=h;
+		return;
+	}
+	htNode* p=stack[stackTop];
+	//htNode* q=p->snext;
+	stack[stackTop]=h;
+	h->snext=p;
+}
+htNode* node_seek(const char* name)
 {
 	int pos=hashpjw(name);
 	htNode* root=htTable[pos];
@@ -38,14 +90,16 @@ bool node_insert(htNode* h)
 {
 	if(h!=NULL){
 		int pos=hashpjw(h->name);
+		h->pos=pos;
 		if(htTable[pos]==NULL)
 		{
 			htTable[pos]=h;
+			symbolAddStack(h);
 			return true;			
 		}
 		else
 		{
-			if(node_seek(h->name)!=NULL)
+			if(symbolAtStackTop(h->name))
 			{
 				return false;
 				//node exsits
@@ -55,6 +109,7 @@ bool node_insert(htNode* h)
 				htNode* temp=htTable[pos]->next;
 				htTable[pos]->next=h;
 				h->next=temp;
+				symbolAddStack(h);
 				return true;
 			}
 		}
@@ -66,8 +121,10 @@ fieldList* fieldFind(fieldList*  structure, const char* fieldName) {
 	assert(fieldName != NULL);
 	//ListHead *p;
 	while(structure!=NULL) {
-		if (strcmp(structure->name, fieldName) == 0)
-			return structure;
+		if(structure->name!=NULL){ 
+			if (strcmp(structure->name, fieldName) == 0)
+				return structure;
+		}
 		structure=structure->next;
 	}
 	return NULL;

@@ -62,7 +62,7 @@ static void analyseExtDefList(node_t* p) {
 		analyseExtDefList(rest);
 }
 static void analyseExtDef(node_t *p) {
-	printf("%d,%s\n",p==NULL,p->name);
+	//printf("%d,%s\n",p==NULL,p->name);
 	assert(isSyntax(p, ExtDef));
 	Type *type = analyseSpecifier(p->child);
 	node_t *second = treeKthChild(p, 2);
@@ -88,7 +88,7 @@ static void analyseExtDecList(node_t *p, Type *type) {
 	htNode *symbol = (htNode*)malloc(sizeof(htNode));
 	symbol->name = toArray(varDec->name);
 	symbol->kind = VAR;
-	symbol->type = type;
+	symbol->type = varDec->type;
 	if (!node_insert(symbol))
 		printerror(3, first->lineno, symbol->name);
 	if (rest!=NULL&&isSyntax(rest, ExtDecList))
@@ -119,7 +119,7 @@ static Type* analyseSpecifier(node_t* p )
 				printerror(17,id->lineno,id->text);
 				//need return ?	
 			}
-			printf("%d:%d\n", __LINE__,symbol->type->kind);
+			//printf("%d:%d\n", __LINE__,symbol->type->kind);
 			return symbol->type;
 
 		}else
@@ -128,6 +128,9 @@ static Type* analyseSpecifier(node_t* p )
 			Type *type = (Type*)malloc(sizeof(Type));
 			type->kind = STRUCTURE;
 			//listInit(&type->structure);
+			type->structure=(Arg*)malloc(sizeof(Arg));
+			type->structure->name=NULL;
+			type->structure->next=NULL;
 			type->structure=analyseDefList(treeKthChild(child, defListIndex), type->structure);
 			if (defListIndex == 4) {
 				node_t* id = treeFirstChild(tag);
@@ -166,7 +169,7 @@ static Dec* analyseVarDec(node_t* p, Type* type) {
 		Dec *dec = (Dec*)malloc(sizeof(Dec));
 		dec->name = toArray(first->text);
 		dec->type = type;
-		printf("%d\n", type->kind);
+		//printf("%d\n", type->kind);
 		return dec;
 	} else {
 		node_t *size = treeKthChild(p, 3);
@@ -262,7 +265,7 @@ static Val analyseExp(node_t* p) {
 				printerror(11, id->lineno, id->text);
 			} else {
 				node_t *args = treeKthChild(p, 3);
-				Arg* list=(Arg*)malloc(sizeof(Arg));
+				Arg* list=NULL;
 				//list->type=(Type*)malloc(sizeo)
 				if (isSyntax(args, Args))
 					list=analyseArgs(args,list);
@@ -283,7 +286,7 @@ static Val analyseExp(node_t* p) {
 			if (!symbol) {
 				printerror(1, first->lineno, first->text);
 			} else {
-				printf("%d\n",symbol->type->kind );
+				//printf("%d\n",symbol->type->kind );
 				return makeVar(symbol->type);
 			}
 		}
@@ -310,7 +313,7 @@ static Val analyseExp(node_t* p) {
 		assert(isSyntax(second, DOT));
 		Val base = analyseExp(first);
 		check(base);
-		printf("%d:%d\n",__LINE__,base.type->kind );
+		//printf("%d:%d\n",__LINE__,base.type->kind );
 		char *fieldName = last->text;
 		if (base.type->kind != STRUCTURE) {
 			printerror(13, second->lineno, "");
@@ -387,7 +390,8 @@ typedef struct FunhtNode {
 } FunhtNode;
 FunhtNode* funhtNodes;
 void FunhtNode_ini(){
-	funhtNodes=(FunhtNode*)malloc(sizeof(FunhtNode));
+	//funhtNodes=(FunhtNode*)malloc(sizeof(FunhtNode));
+	funhtNodes=NULL;
 
 }
 //FunhtNode_ini(funhtNodes); //move it
@@ -417,16 +421,16 @@ static Func* analyseFunDec(node_t* p, Type* type) {
 				FunhtNode *funhtNode = (FunhtNode*)malloc(sizeof(FunhtNode));
 				funhtNode->symbol = symbol;
 				funhtNode->lineno = p->lineno;
-				FunhtNode* p=funhtNodes->next;
-				funhtNodes->next=funhtNode;
-				funhtNode->next=p;
+				funhtNode->next=NULL;
+				funhtNode->next=funhtNodes;
+				funhtNodes=funhtNode;
 			}
 		}
 		//printf("line 384 %d\n",symbol->func->args==NULL );
 		func->args=NULL;
 		if (isSyntax(varList, VarList))
 			func->args=analyseVarList(varList, func->args);
-		/*if (funcEqual(symbol->func, func)) {
+		/*if (funcEqual(symbcol->func, func)) {
 			if (symbol->func != func) {
 				//func->defined = symbol->func->defined;
 				funcRelease(symbol->func);
@@ -438,14 +442,14 @@ static Func* analyseFunDec(node_t* p, Type* type) {
 		}*/
 		return symbol->func;
 	}
-	funcRelease(func);
+	//funcRelease(func);
 	return NULL;
 }
 
 static Arg* analyseVarList(node_t* p, Arg* list) {
 	assert(isSyntax(p, VarList));
 	Arg *arg = analyseParamDec(treeFirstChild(p));
-	printf("%s\n", arg->name);
+	//printf("%s\n", arg->name);
 	list=fieldInsert(list, arg);
 	node_t *rest = treeLastChild(p);
 	if (isSyntax(rest, VarList))
@@ -456,13 +460,13 @@ static Arg* analyseVarList(node_t* p, Arg* list) {
 static Arg* analyseParamDec(node_t* p) {
 	assert(isSyntax(p, ParamDec));
 	Type *type = analyseSpecifier(treeFirstChild(p));
-	printf("%d  %d\n", type->kind,type->basic);
+	//printf("%d  %d\n", type->kind,type->basic);
 	return analyseVarDec(treeLastChild(p), type);
 }
 
 static void analyseCompSt(node_t* p, Func* func) {
 	assert(isSyntax(p, CompSt));
-	//symbolsStackPush();
+	symbolsStackPush();
 	if (func != NULL) {
 		Arg* arg=func->args;
 		while(arg!=NULL) {
@@ -481,7 +485,7 @@ static void analyseCompSt(node_t* p, Func* func) {
 	}
 	if (isSyntax(next, StmtList))
 		analyseStmtList(next);
-	//symbolsStackPop();
+	symbolsStackPop();
 }
 
 static void analyseStmtList(node_t* p) {

@@ -13,7 +13,8 @@ void typeIni()
 	TypeFLOAT->basic=1;
 }
 bool typeEqual(Type* a, Type* b) {
-	if(a!=b) return false; 
+	//if(a!=b) return false; 
+	
 	assert(a != NULL);
 	assert(b != NULL);
 	if (a == b) return true;
@@ -29,6 +30,9 @@ bool typeEqual(Type* a, Type* b) {
 	return false;
 }
 bool argsEqual(Arg* a, Arg* b) {
+	if(a==NULL&&b!=NULL) return false;
+	if(a!=NULL&&b==NULL) return false;
+	if(a==NULL&&b==NULL) return true;
 	assert(a != NULL);
 	assert(b != NULL);
 	while (a!=NULL&&b!=NULL) {
@@ -41,7 +45,7 @@ bool argsEqual(Arg* a, Arg* b) {
 bool funcEqual(Func* a, Func* b) {
 	assert(a != NULL);
 	assert(b != NULL);
-	printf("%d\n",a->args==NULL );
+//	printf("%d\n",a->args==NULL );
 	return (typeEqual(a->retType, b->retType) &&
 			argsEqual(a->args, b->args));
 }
@@ -61,6 +65,7 @@ void funcRelease(Func *func) {
 	free(func);
 }
 void typeRelease(Type *type) {
+	if(type==NULL) return;
 	assert(type != NULL);
 	if (type->kind == ARRAY) {
 		Type *baseType = type->array.elem;
@@ -111,6 +116,7 @@ void typeToStr(Type* type, char* s) {
 	}
 }
 void argsToStr(Arg* list, char* s) {
+	if(list==NULL) return;
 	assert(list != NULL);
 	assert(s != NULL);
 	while(list!=NULL) {
@@ -122,7 +128,7 @@ void argsToStr(Arg* list, char* s) {
 			s += 2;
 		}
 	}
-	printf("%s\n",s );
+	
 }
 
 
